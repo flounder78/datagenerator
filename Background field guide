@@ -1,0 +1,373 @@
+# Background__c Field Standards & Usage Guide
+
+## Purpose & Overview
+
+The `Background__c` field on the Contact object serves as a **persona-driven story guide** that ensures consistent, believable telemetry data generation. This field contains both machine-parseable tags and human-readable narratives that define each contact's demo scenario using a structured, hierarchical format.
+
+### Key Goals:
+- **Data Consistency**: Ensure telemetry aligns with contact's role, behavior, and journey
+- **Demo Reliability**: Predictable outcomes for Einstein models and Agentforce demonstrations  
+- **Script Compatibility**: Machine-readable hierarchical format for Python/automated data generation
+- **Story Coherence**: Maintain realistic user personas across all generated data
+
+---
+
+## Standardized Structure Format
+
+### Required Structure:
+```
+## **STORY SUMMARY** ;
+• Human-readable bullet point 1 ;
+• Human-readable bullet point 2 ;
+• Human-readable bullet point 3 ;
+• Human-readable bullet point 4 (optional) ;
+• Human-readable bullet point 5 (optional) ;
+
+## **TAGS** ;
+### User Status & Risk ;
+** [TAG]: value ;
+** [TAG]: value ;
+
+### Usage & Activity ;
+** [TAG]: value ;
+** [TAG]: value ;
+
+### Account & Tenure ;
+** [TAG]: value ;
+** [TAG]: value ;
+
+### User Sophistication & Collaboration ;
+** [TAG]: value ;
+** [TAG]: value ;
+```
+
+---
+
+## Thematic Tag Categories
+
+### User Status & Risk
+Required tags that define the user's current segment and risk profile:
+
+```
+[SEGMENT]: champion|engaged|casual|conversion_ready|at_risk ;
+[CHURN_RISK]: low|medium|high ;
+[CONVERSION_PROBABILITY]: 0-100 ;
+```
+
+### Usage & Activity
+Tags defining behavioral patterns and platform engagement:
+
+```
+[USAGE_PERCENTILE]: 1-100 ;
+[AVERAGE_SESSION_FREQUENCY]: X/day, Y/week, Z/month ;
+[ERROR_RATE]: 0.0-100.0 ;
+[LAST_LOGIN]: Fixed Date = YYYY-MM-DD HH:MM:SS, Relative Date = <days_from_today> ;
+[PRIMARY_FEATURES]: feature1:percentage,feature2:percentage,feature3:percentage ;
+[API_USAGE]: true|false ;
+[VIRAL_BEHAVIOR]: true|false ;
+[VALUE_EVENTS_MONTHLY]: 0-50 ;
+[SUPPORT_TICKETS_MONTHLY]: 0-20 ;
+[USAGE_LIMITS_HIT]: 0-10 ;
+```
+
+### Account & Tenure
+Tags related to subscription history and account status:
+
+```
+[TENURE_MONTHS]: 1-60 ;
+[CURRENT_PLAN]: free|starter|professional|enterprise ;
+[SIGNUP]: Fixed Date = YYYY-MM-DD HH:MM:SS, Relative Date = <days_from_today> ;
+[LAST_UPGRADE]: Fixed Date = YYYY-MM-DD HH:MM:SS, Relative Date = <days_from_today> ;
+[UPGRADE_EXPLORATION]: true|false ;
+```
+
+### User Sophistication & Collaboration
+Tags defining skill level and team interaction patterns:
+
+```
+[SOPHISTICATION]: basic|intermediate|advanced|expert ;
+[COLLABORATION]: none|low|medium|high ;
+```
+
+---
+
+## Date Format Requirements
+
+### Fixed Date Format:
+- Use 24-hour Java datetime format: `YYYY-MM-DD HH:MM:SS`
+- Randomize timestamp portion (avoid 00:00:00)
+- Examples: `2024-04-28 14:07:31`, `2025-01-15 09:32:45`
+
+### Relative Date Calculation:
+- Calculate days from current date (July 11, 2025)
+- Use negative numbers for past dates
+- Examples: `-439` (439 days ago), `-25` (25 days ago)
+
+### Combined Format:
+```
+[SIGNUP]: Fixed Date = 2024-04-28 14:07:31, Relative Date = -439 ;
+[LAST_UPGRADE]: Fixed Date = 2024-09-01 07:49:12, Relative Date = -313 ;
+[LAST_LOGIN]: Fixed Date = 2025-06-15 21:23:58, Relative Date = -25 ;
+```
+
+### Optional Date Fields:
+- Omit `[LAST_UPGRADE]` if user has never upgraded from initial plan
+- Always include `[SIGNUP]` and `[LAST_LOGIN]`
+
+---
+
+## Session Frequency Format
+
+Use specific format showing daily, weekly, and monthly patterns:
+```
+[AVERAGE_SESSION_FREQUENCY]: X/day, Y/week, Z/month ;
+```
+
+Examples:
+- `[AVERAGE_SESSION_FREQUENCY]: 2/day, 14/week, 60/month ;` (Champion)
+- `[AVERAGE_SESSION_FREQUENCY]: 0/day, 2/week, 8/month ;` (Engaged)
+- `[AVERAGE_SESSION_FREQUENCY]: 0/day, 0/week, 3/month ;` (Casual/At-Risk)
+
+---
+
+## Standard Feature Names (for PRIMARY_FEATURES tag)
+
+Use these exact feature names with percentages (must total ≤100%):
+
+- `basic_dashboard` - Simple overview screens
+- `core_analytics` - Standard reporting and analysis
+- `advanced_analytics` - Complex data analysis tools
+- `custom_dashboards` - User-created dashboard building
+- `api_integration` - API usage and integrations
+- `team_collaboration` - Sharing and team features
+- `data_export` - Exporting data/reports
+- `help_center` - Help documentation and support
+- `premium_preview` - Previewing premium features
+- `admin_settings` - Administrative configuration
+- `automation_setup` - Workflow automation tools
+- `login` - Basic authentication (usually 100% for active users)
+
+---
+
+## Segment Definitions & Characteristics
+
+### Champion (15% of user base)
+- **Usage**: 90-100th percentile, 2/day, 14/week, 60/month sessions
+- **Features**: Advanced analytics, API usage, team collaboration
+- **Behavior**: High viral activity, minimal errors, creates significant value
+- **Conversion**: 85-95% expansion probability if not already on highest tier
+
+### Engaged (35% of user base)  
+- **Usage**: 60-89th percentile, 0/day, 2-4/week, 8-16/month sessions
+- **Features**: Core analytics, some advanced features
+- **Behavior**: Consistent value creation, moderate collaboration
+- **Conversion**: 30-70% depending on plan tier and signals
+
+### Casual (35% of user base)
+- **Usage**: 30-59th percentile, 0/day, 0-1/week, 1-4/month sessions
+- **Features**: Basic dashboard, simple reporting
+- **Behavior**: Limited engagement, price-sensitive
+- **Conversion**: 10-30% typically low urgency
+
+### Conversion-Ready (5-10% of user base)
+- **Usage**: 70-95th percentile, 0-1/day, 3-6/week, 12-25/month sessions
+- **Features**: Core + premium exploration, hitting limits
+- **Behavior**: Value realization with constraint frustration
+- **Conversion**: 70-90% high probability with proper intervention
+
+### At-Risk (10-15% of user base)
+- **Usage**: 1-29th percentile, 0/day, 0/week, 0-3/month sessions
+- **Features**: Basic features only, high help usage
+- **Behavior**: High error rates, support tickets, no value events
+- **Conversion**: 0-15% focus should be on retention
+
+---
+
+## Complete Example Templates by Segment
+
+### Champion User Template
+```
+## **STORY SUMMARY** ;
+• Senior technical leader driving department-wide platform adoption ;
+• Daily usage with extensive custom dashboard creation and API integrations ;
+• Active internal champion conducting product demos for other teams ;
+• Consistently generates high-value insights and automates complex workflows ;
+• Strong expansion candidate for enterprise features and additional seats ;
+
+## **TAGS** ;
+### User Status & Risk ;
+** [SEGMENT]: champion ;
+** [CHURN_RISK]: low ;
+** [CONVERSION_PROBABILITY]: 90 ;
+
+### Usage & Activity ;
+** [USAGE_PERCENTILE]: 95 ;
+** [AVERAGE_SESSION_FREQUENCY]: 2/day, 14/week, 60/month ;
+** [ERROR_RATE]: 1.0 ;
+** [LAST_LOGIN]: Fixed Date = 2025-07-10 16:45:23, Relative Date = -1 ;
+** [PRIMARY_FEATURES]: advanced_analytics:85, custom_dashboards:70, api_integration:45, team_collaboration:60 ;
+** [API_USAGE]: true ;
+** [VIRAL_BEHAVIOR]: true ;
+** [VALUE_EVENTS_MONTHLY]: 25 ;
+** [SUPPORT_TICKETS_MONTHLY]: 0 ;
+** [USAGE_LIMITS_HIT]: 1 ;
+
+### Account & Tenure ;
+** [TENURE_MONTHS]: 18 ;
+** [CURRENT_PLAN]: professional ;
+** [SIGNUP]: Fixed Date = 2024-01-15 09:32:45, Relative Date = -542 ;
+** [LAST_UPGRADE]: Fixed Date = 2024-06-01 14:18:27, Relative Date = -405 ;
+** [UPGRADE_EXPLORATION]: true ;
+
+### User Sophistication & Collaboration ;
+** [SOPHISTICATION]: expert ;
+** [COLLABORATION]: high ;
+```
+
+### At-Risk User Template
+```
+## **STORY SUMMARY** ;
+• Operations executive experiencing significant platform adoption challenges ;
+• Monthly login pattern with frequent feature abandonment and errors ;
+• Unable to build promised compliance dashboards for board reporting ;
+• No value realization events indicating poor product-market fit for legal use case ;
+• High churn risk with potential negative impact on department-wide adoption ;
+
+## **TAGS** ;
+### User Status & Risk ;
+** [SEGMENT]: at_risk ;
+** [CHURN_RISK]: high ;
+** [CONVERSION_PROBABILITY]: 5 ;
+
+### Usage & Activity ;
+** [USAGE_PERCENTILE]: 22 ;
+** [AVERAGE_SESSION_FREQUENCY]: 0/day, 0/week, 3/month ;
+** [ERROR_RATE]: 15.0 ;
+** [LAST_LOGIN]: Fixed Date = 2025-06-15 21:23:58, Relative Date = -25 ;
+** [PRIMARY_FEATURES]: basic_dashboard:90, help_center:35, login:100 ;
+** [API_USAGE]: false ;
+** [VIRAL_BEHAVIOR]: false ;
+** [VALUE_EVENTS_MONTHLY]: 0 ;
+** [SUPPORT_TICKETS_MONTHLY]: 3 ;
+** [USAGE_LIMITS_HIT]: 0 ;
+
+### Account & Tenure ;
+** [TENURE_MONTHS]: 15 ;
+** [CURRENT_PLAN]: enterprise ;
+** [SIGNUP]: Fixed Date = 2024-04-28 14:07:31, Relative Date = -439 ;
+** [LAST_UPGRADE]: Fixed Date = 2024-09-01 07:49:12, Relative Date = -313 ;
+** [UPGRADE_EXPLORATION]: false ;
+
+### User Sophistication & Collaboration ;
+** [SOPHISTICATION]: basic ;
+** [COLLABORATION]: none ;
+```
+
+### Conversion-Ready User Template
+```
+## **STORY SUMMARY** ;
+• Product manager demonstrating strong value realization within current plan constraints ;
+• Weekly usage with frequent premium feature exploration and pricing page visits ;
+• Consistently hitting data export limits while building investor reports ;
+• Extended session durations when accessing advanced analytics capabilities ;
+• High probability conversion candidate with proper enterprise trial offer ;
+
+## **TAGS** ;
+### User Status & Risk ;
+** [SEGMENT]: conversion_ready ;
+** [CHURN_RISK]: low ;
+** [CONVERSION_PROBABILITY]: 80 ;
+
+### Usage & Activity ;
+** [USAGE_PERCENTILE]: 82 ;
+** [AVERAGE_SESSION_FREQUENCY]: 1/day, 5/week, 20/month ;
+** [ERROR_RATE]: 3.5 ;
+** [LAST_LOGIN]: Fixed Date = 2025-07-09 11:28:14, Relative Date = -2 ;
+** [PRIMARY_FEATURES]: core_analytics:80, premium_preview:30, data_export:65, basic_dashboard:70 ;
+** [API_USAGE]: false ;
+** [VIRAL_BEHAVIOR]: true ;
+** [VALUE_EVENTS_MONTHLY]: 12 ;
+** [SUPPORT_TICKETS_MONTHLY]: 1 ;
+** [USAGE_LIMITS_HIT]: 5 ;
+
+### Account & Tenure ;
+** [TENURE_MONTHS]: 8 ;
+** [CURRENT_PLAN]: starter ;
+** [SIGNUP]: Fixed Date = 2024-11-15 08:15:42, Relative Date = -238 ;
+** [UPGRADE_EXPLORATION]: true ;
+
+### User Sophistication & Collaboration ;
+** [SOPHISTICATION]: intermediate ;
+** [COLLABORATION]: medium ;
+```
+
+---
+
+## Field Update Process
+
+### Before Making Changes:
+1. **Review existing Contact fields** (Title, Department, Seniority, etc.) for consistency
+2. **Determine appropriate segment** based on role and business context
+3. **Choose realistic timeline** ensuring signup date aligns with account creation
+4. **Calculate relative dates** from July 11, 2025 baseline
+5. **Select feature usage** that matches title/department (technical roles = more advanced features)
+
+### When Writing Background__c:
+1. **Start with STORY SUMMARY section** - write 3-5 compelling bullet points
+2. **Add TAGS section** with four thematic subsections
+3. **Populate all required tags** in appropriate categories
+4. **Calculate dates properly** with both fixed and relative formats
+5. **Validate consistency** - tags should support the narrative and vice versa
+6. **Ensure proper formatting** - all lines end with space and semicolon
+
+### Quality Checks:
+- [ ] STORY SUMMARY section with 3-5 bullet points ending in `;`
+- [ ] All four thematic tag categories present
+- [ ] All required tags present and properly formatted
+- [ ] Feature percentages are realistic for role/segment  
+- [ ] Dates use proper fixed/relative format
+- [ ] Session frequency uses X/day, Y/week, Z/month format
+- [ ] Narrative bullet points support the quantified data
+- [ ] Segment characteristics align with usage patterns
+- [ ] No real contact information included in narrative
+- [ ] All tag lines end with space and semicolon (`;`)
+
+---
+
+## Script Integration Notes
+
+Python scripts will parse the hierarchical structure using:
+- Section headers: `## **SECTION_NAME** ;`
+- Subsection headers: `### Category Name ;`
+- Tag pattern: `\*\* \[(\w+)\]:\s*([^;]+) ;`
+- Story points: `• (.+) ;`
+
+Key parsing rules:
+- All sections must start with `## **` and end with ` ;`
+- All subsections must start with `### ` and end with ` ;`
+- All tags must start with `** [` and end with ` ;`
+- Date format: `Fixed Date = YYYY-MM-DD HH:MM:SS, Relative Date = <integer>`
+- Session frequency format: `X/day, Y/week, Z/month`
+- Feature lists use `feature:percentage,feature:percentage` format
+- Boolean values use `true|false` (lowercase)
+
+---
+
+## Maintenance & Updates
+
+### When to Update:
+- Contact changes role/department significantly
+- Account upgrades/downgrades plan tier
+- Demo scenario requirements change
+- New features added to platform requiring new usage patterns
+- Relative dates need adjustment for different demo periods
+
+### Version Control:
+- Include update date in Salesforce field history
+- Document major changes for demo consistency
+- Coordinate with telemetry generation scripts when updating standards
+- Update relative date calculations when demo timeline changes
+
+---
+
+This standardization ensures consistent, realistic telemetry data that supports compelling Data Cloud, Einstein, and Agentforce demonstrations while maintaining believable user personas across all generated datasets with a structured, machine-readable format.
